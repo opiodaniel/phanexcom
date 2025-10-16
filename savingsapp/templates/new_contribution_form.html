@@ -17,7 +17,7 @@
         <h5 class="mb-0">Enter New Contribution Details</h5>
     </div>
     <div class="card-body">
-        <form method="post" action="{% url 'record_new_contribution' %}">
+        <form method="post" action="{% url 'record_new_contribution' %}" onsubmit="disableButton(this)">
             {% csrf_token %}
 
             <div class="mb-3">
@@ -40,16 +40,35 @@
                     Fix errors: {{ form.errors }}
                 </div>
             {% endif %}
-
-            <button type="submit" class="btn btn-lg btn-warning w-100 fw-bold action-button">
-                SUBMIT & DOWNLOAD NEW BACKUP 💾
+            <button type="submit" id="submit-btn" class="btn btn-lg btn-success w-100 fw-bold action-button mb-3">
+                SUBMIT CONTRIBUTION
             </button>
         </form>
+        <script>
+        function disableButton(form) {
+            // Find the submit button within the form
+            const submitBtn = document.getElementById('submit-btn');
+
+            // Change the button text and style to give feedback
+            submitBtn.innerHTML = 'Submitting... Please Wait <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+
+            // Disable the button to prevent double-clicking
+            submitBtn.disabled = true;
+
+            // Allow the form to submit
+            return true;
+        }
+        </script>
     </div>
 </div>
 
-<p class="text-center text-muted small mt-3">
-    *Submitting will automatically download a brand-new Excel file containing all history + this new record. **SAVE THIS FILE!**
-</p>
+    <h5 class="mt-4 mb-3 text-center">Finished Recording for Now?</h5>
+    <a href="{% url 'export_all_data' %}" class="btn btn-lg btn-warning w-100 fw-bold action-button">
+        FINISH & DOWNLOAD FINAL BACKUP 💾
+    </a>
+    <p class="text-center text-muted small mt-3">
+        ⚠️ Click above to download ONE complete backup file containing all history + new records.
+    </p>
 
 {% endblock %}

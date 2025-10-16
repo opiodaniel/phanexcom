@@ -101,10 +101,10 @@ def upload_and_prepare_db(request):
 def export_all_data(request):
     # Check if any data exists to export
     if not Contribution.objects.exists():
-        # Handle case where the DB is empty (shouldn't happen if called correctly)
+        # Handle case where the DB is empty
         return redirect('prepare_db')
 
-        # 1. Query ALL data, ordered chronologically
+    # 1. Query ALL data, ordered chronologically
     queryset = Contribution.objects.all().order_by('date', 'id')
 
     # Convert QuerySet to DataFrame
@@ -113,13 +113,46 @@ def export_all_data(request):
     # 2. Add Running Balance Column (Professional Touch)
     df['Running_Balance'] = df['amount'].cumsum()
 
+    # Rename columns for clarity in the final Excel output
+    df = df.rename(columns={
+        'name': 'Member Name',
+        'amount': 'Contribution (UGX)',
+        'date': 'Date of Entry',
+        'Running_Balance': 'Total Savings (UGX)',
+    })
+
     # 3. Create the in-memory Excel file
     output = BytesIO()
-    # Use 'xlsxwriter' for better performance and professional styling if needed
+    # Use 'xlsxwriter' for professional styling
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
 
     # Write DataFrame to the ExcelWriter
     df.to_excel(writer, index=False, sheet_name='All Contributions')
+
+    # --- AUTO-WIDTH IMPLEMENTATION ---
+
+    # Get the xlsxwriter workbook and worksheet objects
+    workbook = writer.book
+    # Access the sheet we just created
+    worksheet = writer.sheets['All Contributions']
+
+    # Define widths for each column based on content size
+    column_widths = [
+        # Col 1: Member Name (A:A) - Needs width for 150 unique names
+        ('A:A', 30),
+        # Col 2: Contribution Amount (B:B) - Sufficient for large UGX numbers
+        ('B:B', 22),
+        # Col 3: Date of Entry (C:C)
+        ('C:C', 18),
+        # Col 4: Total Savings Balance (D:D) - Needs widest space for cumulative total
+        ('D:D', 25),
+    ]
+
+    # Set the column widths
+    for col_range, width in column_widths:
+        worksheet.set_column(col_range, width)
+
+    # --- AUTO-WIDTH IMPLEMENTATION END ---
 
     # Finalize the Excel file generation
     writer.close()
@@ -162,9 +195,8 @@ def record_new_contribution(request):
             # 1. Save the new record to the temporary SQLite DB
             form.save()
 
-            # 2. CRITICAL: Immediately trigger the full export function
-            # This creates a new backup file that includes the new contribution.
-            return export_all_data(request)
+            return redirect('record_new_contribution')
+
 
         # If form is invalid, fall through to display form with errors
     else:
