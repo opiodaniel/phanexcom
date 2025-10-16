@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Prepare Database{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-danger"><i class="bi bi-cloud-upload"></i> Step 1: Prepare Database</h2>
+
+<div class="card shadow-lg border-danger mb-4">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">⚠️ CRITICAL: Upload Latest Backup File</h5>
+    </div>
+    <div class="card-body">
+        <p class="card-text">
+            Since our database is temporary, you **must** upload the latest Excel backup file
+            from your device to restore all historical data before recording new contributions.
+        </p>
+
+        <form method="post" enctype="multipart/form-data" action="{% url 'prepare_db' %}">
+            {% csrf_token %}
+
+            <label for="excel_file" class="form-label fw-bold mt-3">Select .xlsx Backup File:</label>
+            <input class="form-control form-control-lg" id="excel_file" name="excel_file" type="file" required>
+
+            {% if form.errors %}
+                <div class="alert alert-danger mt-3">
+                    There was an error: {{ form.errors }}
+                </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-lg btn-danger w-100 fw-bold action-button">
+                UPLOAD & RESTORE DB
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    Once uploaded, all previous data will be loaded into the system for a short time.
+</div>
+
+{% endblock %}

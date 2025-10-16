@@ -1,0 +1,239 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Family Youth Savings Group</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <style>
+    /* Custom styles to enhance the Bootstrap look, specifically for top ranks */
+    body {
+        background-color: #f8f9fa; /* Bootstrap light background */
+        padding-top: 2rem;
+    }
+
+    /* 1st Place Styling: Gold background, bold border, and slight lift */
+    .rank-gold {
+        background-color: #ffd700 !important; /* Gold */
+        border-color: #ccac00 !important;
+        color: #212529; /* Dark text */
+        box-shadow: 0 0.5rem 1rem rgba(255, 215, 0, 0.4) !important;
+        transform: scale(1.02);
+        transition: all 0.3s ease-in-out;
+    }
+
+    /* 2nd Place Styling: Light gray background */
+    .rank-silver {
+        background-color: #e9ecef !important; /* Lighter gray than standard .list-group-item */
+    }
+
+    /* 3rd Place Styling: Light orange/warning */
+    .rank-bronze {
+        background-color: #ffe5b4 !important; /* Light Bronze/Amber */
+    }
+
+    /* Crown SVG for 1st place */
+    .crown-icon {
+        fill: currentColor;
+        width: 1.25rem;
+        height: 1.25rem;
+        vertical-align: middle;
+        margin-right: 0.25rem;
+    }
+
+    .count-text {
+        font-size: 1.8rem; /* Make the number pop */
+    }
+
+    /* Responsive spacing for smaller screens */
+    @media (max-width: 576px) {
+        .count-text {
+            font-size: 1.5rem;
+        }
+        .name-text {
+            font-size: 1rem;
+        }
+        .list-group-item {
+            padding: 0.75rem 1rem;
+        }
+    }
+    </style>
+</head>
+<body>
+  <h1 class="text-info text-center mb-4">Family Youth Savings Account</h1>
+
+  <div class="container">
+      <div class="row gap-2">
+
+           <div class="col-md-4">
+               <div>
+                   <div class="form-group">
+                       <label for="name">Name</label>
+                       <input type="text" name="name" id="name" class="form-control">
+                       <label for="amount">Amount</label>
+                       <input type="text" name="amount" id="amount" class="form-control">
+                       <label for="date">Date</label>
+                       <input type="date" name="date" id="date" class="form-control">
+                   </div>
+                   <button type="button" onclick="getUserInput(event)" class="btn btn-danger mt-2">Submit</button>
+               </div>
+          </div>
+
+          <div class="col-md-4">
+             <div class="card shadow-lg mx-auto" style="max-width: 500px;">
+                <!-- Header -->
+                <div class="card-header bg-primary text-white text-center py-4 rounded-top">
+                    <h1 class="h3 fw-bold mb-0">Top Distributors</h1>
+                    <p class="mb-0 text-white-50">Amount collected This Month</p>
+
+                    <div class="row gap-1">
+                        <div class="col-md-3 input-group " style="width: 190px;">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" id="distributorSearchInput" class="form-control" placeholder="Search by name or email...">
+                        </div>
+                        <div class="col-md-3 input-group" style="width: 140px;">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <select onchange="change_date(event)">
+                                <option value="">-----------</option>
+                                <option value="all">All</option>
+                                <option value="01">Jan</option>
+                                <option value="02">Feb</option>
+                                <option value="03">March</option>
+                                <option value="04">April</option>
+                                <option value="05">May</option>
+                                <option value="06">June</option>
+                                <option value="07">July</option>
+                                <option value="08">Aug</option>
+                                <option value="09">Sept</option>
+                                <option value="10">Oct</option>
+                                <option value="11">Nov</option>
+                                <option value="12">Dec</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                  <ul class="list-group list-group-flush" id="contributors_id">
+
+                  </ul>
+             </div>
+          </div>
+
+          <div class="col-md-3 bg-secondary">
+              3
+          </div>
+
+      </div>
+
+  </div>
+
+   <script src="{% static 'js/jquery-3.1.1.min.js' %}"></script>
+   <script src="{% static 'js/js.cookie.min.js' %}"></script>
+
+  <!-- csrfSafeMethod CSRF-TOkEN SCRIPT -->
+  <script>
+      var csrftoken = Cookies.get('csrftoken');
+      function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+      }
+      $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+          if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+          }
+        }
+      });
+  </script>
+
+  <script>
+      function change_date(event){
+          var element = event.target;
+          selected_date = element.options[element.selectedIndex].value;
+          //alert(element.options[element.selectedIndex].value);
+
+        $(document).ready(function () {
+
+          sort_by_month_url_link = "{% url 'sort_by_month' %}"
+          $.post(
+              sort_by_month_url_link,
+              data = {
+                  'selected_date': selected_date
+              } ,
+              function(data){
+                  //alert(JSON.stringify(data.contributors));
+                  contributors = data.contributors;
+
+                  document.getElementById('contributors_id').innerHTML = getContributors(contributors);
+              }
+          )
+        })
+      }
+      function getContributors(contributors) {
+
+          return `
+
+          ${contributors.map(leader => `
+                <li class="list-group-item
+                    ${ leader.color } d-flex justify-content-between align-items-center border-0
+                    {% if forloop.counter < 3 %}border-bottom{% endif %}">
+                    <div class="d-flex align-items-center">
+                        <span class="me-3">
+                            <!-- CONDITIONAL ICON/RANK DISPLAY -->
+                            {% if forloop.counter == 1 %}
+                                <span class="p-1 rounded-circle text-warning-emphasis">
+                                    <svg class="crown-icon text-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 15S4 12 7 12s3 2 4 2s3-2 4-2s3 2 4 2V3h-3l-1 5-2-5-2 5-2-5-1 5H5z"/>
+                                    </svg>
+                                </span>
+                            {% else %}
+                                <!-- Display numerical rank for 2 and 3 -->
+                                <span class="h5 fw-bold text-muted" style="min-width: 1.5rem; text-align: center;">{{ forloop.counter }}</span>
+                            {% endif %}
+                        </span>
+
+                        <div class="name-text fw-bolder">${ leader.name }</div>
+                    </div>
+                    <!-- Client Count -->
+                    <div class="d-flex align-items-center">
+                        <span class="count-text fw-bolder text-primary me-2">${ leader.amount }</span>
+                        <span class="badge bg-secondary-subtle text-secondary d-none d-sm-inline">${ leader.time }</span>
+                    </div>
+                </li>
+           `).join('')}
+            <li class="list-group-item">
+               <span class="count-text fw-bolder text-info me-2">Total Amount:</span>
+               <span class="count-text fw-bolder text-success me-2">50,000</span>
+            </li>
+          `;
+      }
+  </script>
+
+  <script>
+      record_amount_url_link = "{% url 'record_amount' %}"
+
+         function getUserInput(event) {
+         var element = event.target;
+         var name = document.getElementById('name').value;
+         var amount = document.getElementById('amount').value;
+         var date = document.getElementById('date').value;
+         $(document).ready(function () {
+             $.post(
+                 record_amount_url_link,
+                 data = {
+                     'name': name,
+                     'amount': amount,
+                     'date': date,
+                 },
+                 function (data) {
+                     alert(JSON.stringify(data));
+                 }
+             )
+         })
+        }
+  </script>
+
+</body>
+</html>

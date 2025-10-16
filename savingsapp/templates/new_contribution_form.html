@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Record Contribution{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-success"><i class="bi bi-pencil-square"></i> Step 2: Record Contribution</h2>
+
+{% if not db_is_prepared %}
+    <div class="alert alert-danger mb-4">
+        <p class="fw-bold">Database is Empty! 🚨</p>
+        <p class="mb-0">Please go to the <a href="{% url 'prepare_db' %}" class="alert-link">Prepare page</a> and upload your latest backup file first.</p>
+    </div>
+{% endif %}
+
+<div class="card shadow-lg border-success">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">Enter New Contribution Details</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'record_new_contribution' %}">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="id_name" class="form-label">Member's Full Name</label>
+                <input type="text" class="form-control" id="id_name" name="name" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="id_amount" class="form-label">Amount (e.g., 5000)</label>
+                <input type="number" class="form-control" id="id_amount" name="amount" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="id_date" class="form-label">Date</label>
+                <input type="date" class="form-control" id="id_date" name="date" value="{{ today }}" required>
+            </div>
+
+            {% if form.errors %}
+                <div class="alert alert-danger mt-3">
+                    Fix errors: {{ form.errors }}
+                </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-lg btn-warning w-100 fw-bold action-button">
+                SUBMIT & DOWNLOAD NEW BACKUP 💾
+            </button>
+        </form>
+    </div>
+</div>
+
+<p class="text-center text-muted small mt-3">
+    *Submitting will automatically download a brand-new Excel file containing all history + this new record. **SAVE THIS FILE!**
+</p>
+
+{% endblock %}
